@@ -1,6 +1,6 @@
 // eslint-disable-next-line no-unused-vars
 import React, { useEffect, useState } from "react";
-import { databases } from "../appwriteConfig";
+import client, { databases } from "../appwriteConfig";
 import { COLLECTION_ID_MESSAGES, DATABASE_ID } from "../globalVariable";
 import { ID, Query } from "appwrite";
 import { Trash2 } from "react-feather";
@@ -12,6 +12,33 @@ function Room() {
 
   useEffect(function () {
     getMessages();
+
+    const unsubcribe = client.subscribe(
+      `databases.${DATABASE_ID}.collections.${COLLECTION_ID_MESSAGES}.documents`,
+      (response) => {
+        if (
+          response.events.includes(
+            "databases.*.collections.*.documents.*.create"
+          )
+        ) {
+          console.log("A MESSAGE WAS CREATED");
+          setMessages((messages) => [response.payload, ...messages]);
+        }
+        if (
+          response.events.includes(
+            "databases.*.collections.*.documents.*.delete"
+          )
+        ) {
+          console.log("A MESSAGE WAS DELETED!!!");
+          setMessages((messages) =>
+            messages.filter((message) => message.$id != response.payload.$id)
+          );
+        }
+      }
+    );
+    return () => {
+      unsubcribe();
+    };
   }, []);
 
   async function handleSubmit(e) {
@@ -27,7 +54,7 @@ function Room() {
     );
 
     console.log("created!", response);
-    setMessages((messages) => [response, ...messages]);
+    // setMessages((messages) => [response, ...messages]);
     setMessageBody("");
   }
   async function getMessages() {
@@ -42,9 +69,9 @@ function Room() {
 
   async function deleteMessage(message_id) {
     databases.deleteDocument(DATABASE_ID, COLLECTION_ID_MESSAGES, message_id);
-    setMessages((messages) =>
-      messages.filter((message) => message.$id != message_id)
-    );
+    // setMessages((messages) =>
+    //   messages.filter((message) => message.$id != message_id)
+    // );
   }
   return (
     <main className="container">
