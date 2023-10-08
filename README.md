@@ -1,4 +1,4 @@
-#Real Time Chat App using React + Appwrite
+# Real Time Chat App using React + Appwrite
 
 This chat app contains features like real time messaging and deleting. It's a global chat, where any logged-in user can post and delete message.
 
